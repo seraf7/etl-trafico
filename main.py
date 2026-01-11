@@ -40,14 +40,17 @@ spark = get_spark_session()
 
 # Aplica transformaciones
 stations_df = transform_stations(spark)
-traffic_df, dateDim = transform_traffic(spark)
-weather_df = transform_weather(spark, dateDim)
+weather_df, dateDim = transform_weather(spark)
+traffic_df = transform_traffic(spark, dateDim)
 fact_df = build_fact_table(stations_df, traffic_df, weather_df, dateDim)
 
 # fact_df.show()
 
 # Vista de resumen
 print("Paso 5. Graba datos")
+
+#ruta = "data/processed/traffic_weather.csv"
+#fact_df.coalesce(1).write.csv(ruta, header=True, mode="overwrite")
 
 fact_df.write.mode("overwrite").partitionBy("year", "month", "day") \
     .parquet("hdfs://localhost:9000/hdfs/traffic_weather/processed/")
