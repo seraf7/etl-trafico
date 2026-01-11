@@ -1,6 +1,6 @@
 from pyspark.sql.functions import *
 
-def transform_traffic(spark):
+def transform_traffic2(spark):
     df = spark.read.json("hdfs://localhost:9000/hdfs/traffic_weather/raw/traffic/traffic.json")
 
     # Tabla de dimension de fecha
@@ -33,3 +33,23 @@ def transform_traffic(spark):
     # Devuelve tabla de dimension de fecha y
     # tabla de trafico con FK
     return df, dateDim
+
+def transform_traffic(spark, dateDim):
+    df = spark.read.json("hdfs://localhost:9000/hdfs/traffic_weather/raw/traffic/traffic.json")
+
+    # Limpieza de tabla de trafico
+    df = df.join(dateDim, 
+                 (df.day == dateDim.day) 
+                 & (df.month == dateDim.month) 
+                 & (df.year == dateDim.year), 
+                 "left"
+                )
+    
+    df = df \
+    .drop("day", "month", "year", "sha2", "tstamp") \
+    .withColumnRenamed("skeyDate", "id_dim_date") \
+    .withColumn("state_cd", df["state_cd"].cast("long")) \
+    .withColumn("sum_veh_count", df["sum_veh_count"].cast("long"))
+
+    # Devuelve tabla trafico con FK
+    return df

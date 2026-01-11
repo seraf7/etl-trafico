@@ -4,9 +4,9 @@ from pyspark.sql.functions import col, year, month, dayofmonth
 def build_fact_table(stations_df, traffic_df, weather_df, dateDim):
     df_fact = traffic_df.join(
         stations_df.alias("b"),
-        (traffic_df.state_cd == stations_df.State_FIPS) 
-        & (traffic_df.station_id == stations_df.station_id), 
-        how="left"
+        (traffic_df.station_id == stations_df.station_id)
+        #& (traffic_df.state_cd == stations_df.State_FIPS)
+        ,how="left"
     ).select("id_dim_date", "state_cd", 
              "b.station_id", "sum_veh_count", 
              "functional_class", "latitude",
@@ -16,13 +16,13 @@ def build_fact_table(stations_df, traffic_df, weather_df, dateDim):
     df_fact = df_fact.join(
         weather_df, 
         on="id_dim_date", 
-        how="inner"
+        how="left"
     )
 
     df_fact = df_fact.join(
         dateDim, 
         (df_fact.id_dim_date == dateDim.skeyDate), 
-        how="inner"
+        how="left"
     )
 
     df_fact = df_fact.drop("sha2", "skeyDate", "tstamp")
